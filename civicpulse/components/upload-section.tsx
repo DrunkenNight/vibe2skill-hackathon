@@ -53,8 +53,7 @@ export function UploadSection() {
   return (
     <section id="upload" className="mx-auto max-w-3xl px-5 pb-24">
       <div className="iridescent-border rounded-2xl">
-        <div className="rounded-2xl bg-card p-6 md:p-8">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-teal">Submit a Report</p>
+            <div className="rounded-2xl bg-white p-6 md:p-8">
           <h2 className="mt-3 font-display text-3xl font-light text-ink">Show us what needs fixing</h2>
 
           <div

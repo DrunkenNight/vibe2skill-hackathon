@@ -18,7 +18,7 @@ export function Navbar() {
             <li key={link.label}>
               <a
                 href={link.href}
-                className="font-sans text-sm text-ink-muted transition-colors hover:text-ink"
+                className="font-sans text-sm text-[#7A6A58] transition-colors hover:text-[#1A1208]"
               >
                 {link.label}
               </a>

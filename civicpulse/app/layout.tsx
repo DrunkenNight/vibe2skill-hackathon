@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} bg-background`}
+      className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} bg-[#FAF7F2]`}
     >
       <body className="font-sans antialiased">{children}</body>
     </html>

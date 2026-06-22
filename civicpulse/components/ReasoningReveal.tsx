@@ -19,9 +19,9 @@ export function ReasoningReveal({ steps }: { steps: Step[] }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.15, duration: 0.4, ease: "easeOut" }}
-          className="flex items-start gap-4 rounded-xl border border-border border-l-4 border-l-teal bg-ivory-deep px-5 py-4"
+          className="flex items-start gap-4 rounded-xl border border-[#E6DDCF] border-l-4 border-l-[#5BBFBF] bg-[#F2EDE4] px-5 py-4"
         >
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-background font-mono text-xs text-ink-muted">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E6DDCF] bg-white font-mono text-xs text-ink-muted">
             {i + 1}
           </span>
           <div className="min-w-0 flex-1">
