@@ -32,7 +32,7 @@ export default function TestPage() {
       <input type="file" accept="image/*" onChange={handleSubmit} />
       {loading && <p style={{ color: "#5BBFBF", marginTop: 12 }}>Analyzing…</p>}
       {error && <pre style={{ color: "red", marginTop: 12, whiteSpace: "pre-wrap" }}>{error}</pre>}
-      {result && <pre style={{ marginTop: 16, background: "#f2ede4", padding: 16, borderRadius: 8, fontSize: 12, overflowX: "auto", whiteSpace: "pre-wrap" }}>{JSON.stringify(result, null, 2)}</pre>}
+      {result ? <pre style={{ marginTop: 16, background: "#f2ede4", padding: 16, borderRadius: 8, fontSize: 12, overflowX: "auto", whiteSpace: "pre-wrap" }}>{JSON.stringify(result, null, 2)}</pre> : null}
     </div>
   );
 }
