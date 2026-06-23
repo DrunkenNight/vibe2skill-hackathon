@@ -82,12 +82,12 @@ export function UploadSection() {
 
       const data = await response.json();
       const allSteps = data.steps ?? [];
+      setAnalysisSteps([]);
       allSteps.forEach((step: { step: string; result: unknown }, index: number) => {
         setTimeout(() => {
           setAnalysisSteps((prev) => [...prev, step]);
-        }, index * 400);
+        }, index * 600);
       });
-
       setIsAnalyzing(false);
     } catch (err) {
       setAnalysisError(String(err));

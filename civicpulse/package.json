@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "fuser -k 3000/tcp 2>/dev/null; next dev",
     "build": "next build",
+    "vercel-build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
