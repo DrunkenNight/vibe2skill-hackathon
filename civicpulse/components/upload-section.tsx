@@ -47,46 +47,52 @@ export function UploadSection() {
     setAnalysisError(null);
     setAnalysisSteps([]);
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const base64 = (reader.result as string).split(",")[1];
-        const res = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imageBase64: base64,
-            mimeType: selectedFile.type,
-            lat: 17.385,
-            lon: 78.487,
-            existingReports: [],
-          }),
-        });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
+    const toBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(",")[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-        const allSteps: Step[] = data.steps ?? [];
+    try {
+      const imageBase64 = await toBase64(selectedFile);
 
-        setAnalysisSteps([allSteps[0]]);
-
-        const delays = [400, 800, 1200];
-        delays.forEach((delay, i) => {
-          if (!allSteps[i + 1]) return;
-          const id = setTimeout(() => {
-            setAnalysisSteps((prev) => [...prev, allSteps[i + 1]]);
-            if (i === delays.length - 1) setIsAnalyzing(false);
-          }, delay);
-          timeoutIds.current.push(id);
-        });
-
-        if (allSteps.length < 4) setIsAnalyzing(false);
-
-      } catch (err) {
-        setAnalysisError(String(err));
+      if (!imageBase64 || imageBase64.length < 100) {
+        setAnalysisError("Image conversion failed — please try again");
         setIsAnalyzing(false);
+        return;
       }
-    };
-    reader.readAsDataURL(selectedFile);
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64,
+          mimeType: selectedFile.type,
+          lat: 17.385,
+          lon: 78.487,
+          existingReports: [],
+        }),
+      });
+
+      const data = await response.json();
+      const allSteps = data.steps ?? [];
+      allSteps.forEach((step: { step: string; result: unknown }, index: number) => {
+        setTimeout(() => {
+          setAnalysisSteps((prev) => [...prev, step]);
+        }, index * 400);
+      });
+
+      setIsAnalyzing(false);
+    } catch (err) {
+      setAnalysisError(String(err));
+      setIsAnalyzing(false);
+    }
   }
 
   return (

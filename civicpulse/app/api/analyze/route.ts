@@ -28,6 +28,26 @@ export async function POST(req: NextRequest) {
   try {
     const { imageBase64, mimeType, lat, lon, existingReports = [] } = await req.json();
 
+    console.log("classify input", {
+      hasImageBase64: !!imageBase64,
+      imageBase64Length: imageBase64?.length,
+      mimeType,
+    });
+
+    if (!imageBase64 || imageBase64.trim() === "") {
+      return NextResponse.json(
+        { error: "Missing or empty imageBase64 — image was not received" },
+        { status: 400 }
+      );
+    }
+
+    if (!mimeType) {
+      return NextResponse.json(
+        { error: "Missing mimeType — image type was not provided" },
+        { status: 400 }
+      );
+    }
+
     let classification = { category: "other", description: "Unable to classify", confidence: 0 };
     try {
       const classifyResponse = await ai.models.generateContent({
@@ -35,14 +55,14 @@ export async function POST(req: NextRequest) {
         contents: [{
           role: "user",
           parts: [
-            { inlineData: { mimeType: mimeType ?? "image/jpeg", data: imageBase64 } },
+            { inlineData: { mimeType: mimeType, data: imageBase64 } },
             { text: `You are analyzing a photo of a civic infrastructure issue in India.\nClassify it into exactly one of: pothole, water_leakage, streetlight, waste_management, other\nProvide a factual one-sentence description of what is visible.\nProvide a confidence score from 0.0 to 1.0.\nRespond ONLY with valid JSON, no markdown, no extra text:\n{"category":"...","description":"...","confidence":0.0}` },
           ],
         }],
         config: { responseMimeType: "application/json" },
       });
       const classifyText = classifyResponse.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-      classification = JSON.parse(classifyText.replace(/json|/g, "").trim());
+      classification = JSON.parse(classifyText.replace(/```json|```/g, "").trim());
     } catch (err) {
       console.error("Classify error:", err);
     }
@@ -99,7 +119,7 @@ export async function POST(req: NextRequest) {
         try {
           const res = await ai.models.generateContent({
             model: MODEL,
-            contents: [{ role: "user", parts: [{ text: `Draft a formal 2-3 sentence report for the ${department} department.\nCategory: ${classification.category}\nDescription: ${classification.description}\nSeverity: moderate\nDuplicates: ${duplicateNote}\nProfessional, formal tone. No markdown. Include issue, severity, duplicate status, recommended action.` }] }],
+            contents: [{ role: "user", parts: [{ text: `Draft a formal 2-3 sentence report for the ${department} department.\nCategory: ${classification.category}\nDescription: ${classification.description}\nConfidence: ${classification.confidence}\nDuplicates: ${duplicateNote}\nProfessional, formal tone. No markdown. Include issue, severity, duplicate status, recommended action.` }] }],
           });
           return res.candidates?.[0]?.content?.parts?.[0]?.text ?? reportText;
         } catch (err) {
