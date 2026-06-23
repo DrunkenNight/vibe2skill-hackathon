@@ -140,9 +140,9 @@ IMPORTANT: Always return a complete 3-sentence report. Never return an empty res
         console.log("[step3] calling Gemini with googleSearch grounding...");
         try {
           const res = await ai.models.generateContent({
-            model: MODEL,
+            model: "gemini-2.0-flash",
             contents: [{ role: "user", parts: [{ text: severityPrompt }] }],
-            config: { tools: [{ googleSearch: {} }], toolConfig: { functionCallingConfig: { mode: "AUTO" } } },
+            config: { tools: [{ googleSearch: {} }] },
           });
           const parts = res.candidates?.[0]?.content?.parts ?? [];
           const text = parts
