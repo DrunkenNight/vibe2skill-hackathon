@@ -1,24 +1,34 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { UploadCloud, MapPin } from "lucide-react";
-import { ReasoningReveal } from "@/components/ReasoningReveal";
+import { ReasoningReveal } from "components/ReasoningReveal";
 
 interface Step { step: string; result: unknown; }
 
 const PLACEHOLDER_STEPS = [
-  { label: "Classifying issue...", hint: "Identifying the category from the photo." },
-  { label: "Checking nearby reports...", hint: "Looking for duplicates within the area." },
-  { label: "Assessing severity...", hint: "Estimating urgency and public impact." },
+  { label: "Classifying issue...",           hint: "Identifying the category from the photo." },
+  { label: "Checking nearby reports...",     hint: "Looking for duplicates within the area." },
+  { label: "Assessing severity...",          hint: "Estimating urgency and public impact." },
   { label: "Drafting report and routing...", hint: "Preparing the case for the right department." },
 ];
 
 export function UploadSection() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedFile, setSelectedFile]   = useState<File | null>(null);
+  const [preview, setPreview]             = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing]     = useState(false);
   const [analysisSteps, setAnalysisSteps] = useState<Step[]>([]);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
+  const timeoutIds = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => { timeoutIds.current.forEach(clearTimeout); };
+  }, []);
+
+  function clearPendingTimeouts() {
+    timeoutIds.current.forEach(clearTimeout);
+    timeoutIds.current = [];
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -27,11 +37,16 @@ export function UploadSection() {
     setPreview(URL.createObjectURL(file));
     setAnalysisSteps([]);
     setAnalysisError(null);
+    clearPendingTimeouts();
   }
 
   async function handleAnalyze() {
     if (!selectedFile) return;
-    setIsAnalyzing(true); setAnalysisError(null); setAnalysisSteps([]);
+    clearPendingTimeouts();
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    setAnalysisSteps([]);
+
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -39,13 +54,37 @@ export function UploadSection() {
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, mimeType: selectedFile.type, lat: 17.385, lon: 78.487, existingReports: [] }),
+          body: JSON.stringify({
+            imageBase64: base64,
+            mimeType: selectedFile.type,
+            lat: 17.385,
+            lon: 78.487,
+            existingReports: [],
+          }),
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        setAnalysisSteps(data.steps ?? []);
-      } catch (err) { setAnalysisError(String(err)); }
-      setIsAnalyzing(false);
+
+        const allSteps: Step[] = data.steps ?? [];
+
+        setAnalysisSteps([allSteps[0]]);
+
+        const delays = [400, 800, 1200];
+        delays.forEach((delay, i) => {
+          if (!allSteps[i + 1]) return;
+          const id = setTimeout(() => {
+            setAnalysisSteps((prev) => [...prev, allSteps[i + 1]]);
+            if (i === delays.length - 1) setIsAnalyzing(false);
+          }, delay);
+          timeoutIds.current.push(id);
+        });
+
+        if (allSteps.length < 4) setIsAnalyzing(false);
+
+      } catch (err) {
+        setAnalysisError(String(err));
+        setIsAnalyzing(false);
+      }
     };
     reader.readAsDataURL(selectedFile);
   }
@@ -53,7 +92,7 @@ export function UploadSection() {
   return (
     <section id="upload" className="mx-auto max-w-3xl px-5 pb-24">
       <div className="iridescent-border rounded-2xl">
-            <div className="rounded-2xl bg-white p-6 md:p-8">
+        <div className="rounded-2xl bg-white p-6 md:p-8">
           <h2 className="mt-3 font-display text-3xl font-light text-ink">Show us what needs fixing</h2>
 
           <div
