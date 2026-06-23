@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd civicpulse && npm install && npm run build",
-  "outputDirectory": "civicpulse/.next",
-  "installCommand": "cd civicpulse && npm install",
   "framework": "nextjs",
   "rootDirectory": "civicpulse"
 }
